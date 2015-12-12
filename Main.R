@@ -2,8 +2,6 @@ library('rgl')
 library('Rcpp')
 library('plyr')
 
-
-
 degreeDistribution <- function(n){
   counts = edgeCounter()
   x11()
@@ -15,7 +13,7 @@ degreeDistribution <- function(n){
 
 generateGraph <- function(x, y, z, n, radius){
   print("PLOTTING GRAPH")
-  plot3d(x,y,z, col="red")
+  plot3d(x,y,z, col="red", size=10)
   set_points(cbind(x,y,z))
   
   print("GENERATING CONNECTIONS")
@@ -27,7 +25,7 @@ generateGraph <- function(x, y, z, n, radius){
   
   print("GRAPHING MAX NODE")
   open3d()
-  plot3d(x,y,z, col="red")
+  plot3d(x,y,z, col="red", size=10)
   max = maxEdges()
   max_x = max[,1]
   max_y = max[,2]
@@ -50,14 +48,16 @@ generateGraph <- function(x, y, z, n, radius){
   max = max(coloring[,4])
   colors = rainbow(max)
   print("PLOTTING COLORS")
-  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], cex=.9, pch=19)
+  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=10)
   segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 1, 0.1), alpha=.3)
   print(paste("COLOR COUNT: ", max))
   color_table = table(coloring[,4])
   x11()
   barplot(color_table, col=colors[1:max])
   
+  print("FINDING MAX BIPARTIDE SUBGRAPH")
   
+  print("GRAPHING MAX BIPARTIDE SUBGRAPH")
 }
 
 generateRGG <- function(n, degree, type){
@@ -98,4 +98,4 @@ generateRGG <- function(n, degree, type){
 }
 
 
-generateRGG(4000, 10, "square")
+generateRGG(400, 10, "square")
