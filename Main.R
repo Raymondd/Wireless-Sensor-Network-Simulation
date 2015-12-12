@@ -23,7 +23,7 @@ generateGraph <- function(x, y, z, n, radius){
   pairs_x = m[,1]
   pairs_y = m[,2]
   pairs_z = m[,3]
-  segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 1, 0.3))
+  segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 1, 0.3), alpha=.3)
   
   print("GRAPHING MAX NODE")
   open3d()
@@ -32,7 +32,7 @@ generateGraph <- function(x, y, z, n, radius){
   max_x = max[,1]
   max_y = max[,2]
   max_z = max[,3]
-  segments3d(max_x, max_y, max_z, col=rgb(0, 1, 0, 0.3))
+  segments3d(max_x, max_y, max_z, col=rgb(0, 1, 0, 0.3), alpha=.3)
   
   
   print("CREATING EDGE DISTRIBUTION")
@@ -44,6 +44,19 @@ generateGraph <- function(x, y, z, n, radius){
   x11()
   plot(stats[,2], col="red", type="l", ylim=range(c(stats[,1],stats[,2])))
   lines(stats[,1], col="blue", type="l")
+  
+  print("GENERATING COLORS")
+  coloring = colorGraph()
+  max = max(coloring[,4])
+  colors = rainbow(max)
+  print("PLOTTING COLORS")
+  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], cex=.9, pch=19)
+  segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 1, 0.1), alpha=.3)
+  print(paste("COLOR COUNT: ", max))
+  color_table = table(coloring[,4])
+  x11()
+  barplot(color_table, col=colors[1:max])
+  
   
 }
 
@@ -85,4 +98,4 @@ generateRGG <- function(n, degree, type){
 }
 
 
-generateRGG(4000, 120, "square")
+generateRGG(4000, 10, "square")

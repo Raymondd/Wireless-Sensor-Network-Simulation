@@ -1,23 +1,88 @@
 #include <Rcpp.h>
 #include <map>
 #include <limits>
+#include <vector>
 using namespace Rcpp;
 
 NumericMatrix points;
 NumericMatrix pairs;
+NumericVector smallestLast;
 int n;
 int x = 0;
 int y = 1;
 int z = 2;
+typedef std::vector<double> list;
+std::map<double, list> adj_list;
+
+struct point{double point[3];};
+std::map<double, point> map_points;
+
+
 // [[Rcpp::export]]
 void set_points(NumericMatrix p){
   points = p;
   n = p.nrow();
+  for(int i = 0; i < n; i++){
+    point myPoint = {p(i,x), p(i,y), p(i,z)};
+    map_points[p(i,x)] = myPoint;
+  }
+}
+
+// [[Rcpp::export]]
+void printAdjList(){
+  std::map<double, list>::iterator l;
+  for (l = adj_list.begin(); l != adj_list.end(); ++l  )
+  {
+    std::cout << l->first << " : ";
+    for(double i : l->second)
+      std::cout << i << ", " ;
+      
+    std::cout << std::endl;
+  }
+}
+
+// [[Rcpp::export]]
+NumericMatrix colorGraph(){
+  std::map<double, int> colors;
+  
+  for(int i = 0; i < n; i++){
+    double current = smallestLast[i];
+    
+    int color = 1;
+    bool colorFound = true;
+    while(colorFound){
+      colorFound = false;
+      for(double neighbor : adj_list[current]){
+        if(colors[neighbor] == color){
+          if(!colorFound){
+            color++;
+            colorFound = true;
+          }
+        }
+      }
+    }
+    
+    colors[current] = color;
+  }
+  
+  NumericMatrix final(n,4);
+  std::map<double, int>::iterator l;
+  int index = 0;
+  for (l = colors.begin(); l != colors.end(); ++l){
+    //double point_[3] = map_points[l->first][0]; 
+    final(index, 0) = map_points[l->first].point[0];
+    final(index, 1) = map_points[l->first].point[1];
+    final(index, 2) = map_points[l->first].point[2];
+    final(index, 3) = l->second;
+    index++;
+  }
+  return final;
 }
 
 // [[Rcpp::export]]
 NumericMatrix smallestLastOrdering() {
   NumericMatrix final(points.nrow(),2);
+  NumericVector order(points.nrow());
   
   NumericVector pnts(points.nrow());
   for(int i = 0; i < points.nrow(); i++){
@@ -73,6 +138,7 @@ NumericMatrix smallestLastOrdering() {
     //add to output
     final(next, 0) = min;
     final(next, 1) = org_counts[minKey];
+    order[next] = minKey;
     next--;
     
     //remove from map and pairs
@@ -93,6 +159,8 @@ NumericMatrix smallestLastOrdering() {
       it->second = 0;
     }
   }
+  
+  smallestLast = order;
   return final;
 }
 
@@ -167,11 +235,20 @@ NumericMatrix distance3D(double radius) {
             xx(num, 1) = points(j,y);
             xx(num, 2) = points(j,z);
             num++;
-        }
             
+          //if(adj_list[points(i,x)] == NULL){
+            //adj_list[points(i,x)] = list();
+          //}
+          adj_list[points(i,x)].push_back(points(j,x));
+          
+          //if(adj_list[points(j,x)] == NULL){
+            //adj_list[points(j,x)] = list();
+          //}
+          adj_list[points(j,x)].push_back(points(i,x));
+        }
       }
     }
-   }
+  }
      
   NumericMatrix final(num, 3);
   for (int i = 0; i < num; i++){
@@ -180,6 +257,7 @@ NumericMatrix distance3D(double radius) {
     final(i, 2) = xx(i, 2);
   }
 
+  
   pairs = final;
   return final;
 }
