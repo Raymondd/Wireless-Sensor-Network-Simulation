@@ -13,7 +13,7 @@ degreeDistribution <- function(n){
 
 generateGraph <- function(x, y, z, n, radius){
   print("PLOTTING GRAPH")
-  plot3d(x,y,z, col="red", size=10)
+  plot3d(x,y,z, col="red", size=5)
   set_points(cbind(x,y,z))
   
   print("GENERATING CONNECTIONS")
@@ -25,7 +25,7 @@ generateGraph <- function(x, y, z, n, radius){
   
   print("GRAPHING MAX NODE")
   open3d()
-  plot3d(x,y,z, col="red", size=10)
+  plot3d(x,y,z, col="red", size=5)
   max = maxEdges()
   max_x = max[,1]
   max_y = max[,2]
@@ -37,7 +37,7 @@ generateGraph <- function(x, y, z, n, radius){
   degreeDistribution(n)
   
   print("CALCULATING SMALLEST LAST ORDERING")
-  stats = smallestLastOrdering()
+  stats = smallestLastOrdering3()
   print("GRAPHING SMALLEST LAST ORDERING")
   x11()
   plot(stats[,2], col="red", type="l", ylim=range(c(stats[,1],stats[,2])))
@@ -48,7 +48,8 @@ generateGraph <- function(x, y, z, n, radius){
   max = max(coloring[,4])
   colors = rainbow(max)
   print("PLOTTING COLORS")
-  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=10)
+  open3d()
+  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=5)
   segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 1, 0.1), alpha=.3)
   print(paste("COLOR COUNT: ", max))
   color_table = table(coloring[,4])
@@ -98,4 +99,4 @@ generateRGG <- function(n, degree, type){
 }
 
 
-generateRGG(400, 10, "square")
+generateRGG(40000, 120, "sphere")

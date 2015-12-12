@@ -165,6 +165,117 @@ NumericMatrix smallestLastOrdering() {
 }
 
 // [[Rcpp::export]]
+NumericMatrix smallestLastOrdering2() {
+  NumericMatrix final(points.nrow(),2);
+  NumericVector order(points.nrow());
+  
+  std::map<double, int> counts;
+  std::map<double, int> org_counts;
+  std::map<double, list>::iterator l;
+  for (l = adj_list.begin(); l != adj_list.end(); ++l  )
+  {
+    counts[l->first] = l->second.size();
+    org_counts[l->first] = l->second.size();
+  }
+  
+  int next = n-1;
+  std::map<double, int>::iterator it;
+  while (next >= 0){
+    //find min key
+    int min = counts.begin()->second;
+    double minKey = counts.begin()->first;
+    for (it = counts.begin(); it != counts.end(); ++it  )
+    {
+      if(it->second < min){
+        min = it->second;
+        minKey = it->first;
+      }
+    }
+    
+    //add to output
+    final(next, 0) = min;
+    final(next, 1) = org_counts[minKey];
+    order[next] = minKey;
+    next--;
+    
+    //decrement neighbors and remove key
+    counts.erase(minKey);
+    for(double i : adj_list[minKey]){
+      if(counts.find(i) != counts.end()){
+        counts[i]--;
+      }
+    }
+  }
+  smallestLast = order;
+  return final;
+}
+
+// [[Rcpp::export]]
+NumericMatrix smallestLastOrdering3() {
+  NumericMatrix final(points.nrow(),2);
+  NumericVector order(points.nrow());
+  
+  std::map<double, int> counts;
+  std::map<double, int> org_counts;
+  std::map<int, list> buckets;
+  std::map<double, list>::iterator l;
+  int max = 0;
+  for (l = adj_list.begin(); l != adj_list.end(); ++l  )
+  {
+    int size = l->second.size();
+    counts[l->first] = size;
+    org_counts[l->first] = size;
+    
+    if(buckets.find(size) == buckets.end()){
+      buckets[size] = list();
+    }
+    buckets[size].push_back(l->first);
+    
+    if(size > max){
+      max = size;
+    }
+  }
+  
+  int next = n-1;
+  std::map<int, list>::iterator it;
+  while (next >= 0){
+    //find min key
+    int min;
+    double minKey;
+    for (int i = 0; i < max+1; i++)
+    {
+      if(buckets[i].size() > 0){
+        min = i;
+        minKey = buckets[i][0];
+        buckets[i].erase(buckets[i].begin());
+        break;
+      }
+    }
+    
+    //add to output
+    final(next, 0) = min;
+    final(next, 1) = org_counts[minKey];
+    order[next] = minKey;
+    next--;
+    
+    //decrement neighbors and remove key
+    counts.erase(minKey);
+    for(double i : adj_list[minKey]){
+      if(counts.find(i) != counts.end()){
+        buckets[counts[i]].erase(std::remove(buckets[counts[i]].begin(), buckets[counts[i]].end(), i), buckets[counts[i]].end());
+        counts[i]--;
+        if(buckets.find(counts[i]) == buckets.end()){
+          buckets[counts[i]] = list();
+        }
+        buckets[counts[i]].push_back(i);
+      }
+    }
+  }
+  smallestLast = order;
+  return final;
+}
+
+// [[Rcpp::export]]
 NumericMatrix maxEdges() {
   std::map<double, int> counts;
   for(int i = 0; i < pairs.nrow(); i++){
@@ -218,7 +329,7 @@ NumericMatrix maxEdges() {
 NumericMatrix distance3D(double radius) {
   int size = n*n;
   if (size < 0){
-    size = n/2*n/2;
+    size = std::numeric_limits<int>::max();
   }
   NumericMatrix xx(size, 3);
   int num = 0;
@@ -236,14 +347,7 @@ NumericMatrix distance3D(double radius) {
             xx(num, 2) = points(j,z);
             num++;
             
-          //if(adj_list[points(i,x)] == NULL){
-            //adj_list[points(i,x)] = list();
-          //}
-          adj_list[points(i,x)].push_back(points(j,x));
-          
-          //if(adj_list[points(j,x)] == NULL){
-            //adj_list[points(j,x)] = list();
-          //}
+          adj_list[points(i,x)].push_back(points(j,x)); 
           adj_list[points(j,x)].push_back(points(i,x));
         }
       }
@@ -262,6 +366,46 @@ NumericMatrix distance3D(double radius) {
   return final;
 }
 
+// [[Rcpp::export]]
+NumericMatrix lineSweepDistance(double radius) {
+  int size = n*n;
+  if (size < 0){
+    size = std::numeric_limits<int>::max();
+  }
+  NumericMatrix xx(size, 3);
+  int num = 0;
+  
+   for (int i = 0; i < n; i++){
+    for (int j = i+1; j < n; j++){
+      if (sqrt(pow((points(i,x) - points(j,x)), 2) + pow((points(i,y) - points(j,y)), 2) + pow((points(i,z) - points(j,z)), 2)) <= radius){
+        if(num < size){
+            xx(num, 0) = points(i,x);
+            xx(num, 1) = points(i,y);
+            xx(num, 2) = points(i,z);
+            num++;
+            xx(num, 0) = points(j,x);
+            xx(num, 1) = points(j,y);
+            xx(num, 2) = points(j,z);
+            num++;
+            
+          adj_list[points(i,x)].push_back(points(j,x)); 
+          adj_list[points(j,x)].push_back(points(i,x));
+        }
+      }
+    }
+  }
+     
+  NumericMatrix final(num, 3);
+  for (int i = 0; i < num; i++){
+    final(i, 0) = xx(i, 0);
+    final(i, 1) = xx(i, 1);
+    final(i, 2) = xx(i, 2);
+  }
+
+  
+  pairs = final;
+  return final;
+}
 
 // [[Rcpp::export]]
 NumericMatrix edgeCounter() {
