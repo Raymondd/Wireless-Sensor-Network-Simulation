@@ -2,6 +2,7 @@
 #include <map>
 #include <limits>
 #include <vector>
+#include <algorithm>
 using namespace Rcpp;
 
 NumericMatrix points;
@@ -13,9 +14,15 @@ int y = 1;
 int z = 2;
 typedef std::vector<double> list;
 std::map<double, list> adj_list;
+std::map<double, int> colors;
 
 struct point{double point[3];};
 std::map<double, point> map_points;
+
+int max1[2] = {1,2};
+int max2[2] = {1,3};
+int max3[2] = {1,4};
+
 
 
 // [[Rcpp::export]]
@@ -43,7 +50,6 @@ void printAdjList(){
 
 // [[Rcpp::export]]
 NumericMatrix colorGraph(){
-  std::map<double, int> colors;
   
   for(int i = 0; i < n; i++){
     double current = smallestLast[i];
@@ -220,7 +226,7 @@ NumericMatrix smallestLastOrdering3() {
   std::map<int, list> buckets;
   std::map<double, list>::iterator l;
   int max = 0;
-  for (l = adj_list.begin(); l != adj_list.end(); ++l  )
+  for (l = adj_list.begin(); l != adj_list.end(); ++l)
   {
     int size = l->second.size();
     counts[l->first] = size;
@@ -324,13 +330,9 @@ NumericMatrix maxEdges() {
   return final; 
 }
 
-
 // [[Rcpp::export]]
-NumericMatrix distance3D(double radius) {
-  int size = n*n;
-  if (size < 0){
-    size = std::numeric_limits<int>::max();
-  }
+NumericMatrix distance3D(double radius, int neighbors) {
+  int size = n*neighbors*2;
   NumericMatrix xx(size, 3);
   int num = 0;
   
@@ -385,7 +387,7 @@ NumericMatrix lineSweepDistance(double radius) {
             num++;
             xx(num, 0) = points(j,x);
             xx(num, 1) = points(j,y);
-            xx(num, 2) = points(j,z);
+            xx(num, 2) = points(j,z); 
             num++;
             
           adj_list[points(i,x)].push_back(points(j,x)); 
@@ -430,7 +432,7 @@ NumericMatrix edgeCounter() {
   
   NumericMatrix final(max,2);
   int zeros = 0;
-  for (it = posCounts.begin(); it != posCounts.end(); ++it  )
+  for (it = posCounts.begin(); it != posCounts.end(); ++it)
   {
     final(it->second, 1)++;
     zeros++;
@@ -443,3 +445,67 @@ NumericMatrix edgeCounter() {
   
   return final;
 }
+
+// [[Rcpp::export]]
+void calculateSubgraphs(double radius){
+  
+  std::map<double, int>::iterator l;
+  for(int i=1; i < 4; i++){
+    for(int j = i+1; j <= 4, j++){
+      int count = 0;
+      for (l = colors.begin(); l != colors.end(); ++l){ 
+        if(l->second == i || l->second == j){
+          for (int i=0; i < adj_list[l->first].size(); i++) {
+            if(colors[adj_list[l->first][i]] == i || colors[adj_list[l->first][i]] == j){
+              count++;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// [[Rcpp::export]]
+NumericMatrix maximumSubgraph1(){
+  NumericMatrix sub_points(pairs.nrow(),3);
+  
+  std::map<double, int>::iterator l;
+  int index = 0;
+  for (l = colors.begin(); l != colors.end(); ++l){ 
+    if(l->second == max1[0] || l->second == max1[1]){
+      for (int i=0; i < adj_list[l->first].size(); i++) {
+        if(colors[adj_list[l->first][i]] == max1[0] || colors[adj_list[l->first][i]] == max1[1]){
+          sub_points(index, 0) = map_points[l->first].point[0];
+          sub_points(index, 1) = map_points[l->first].point[1];
+          sub_points(index, 2) = map_points[l->first].point[2];
+          index++;
+          sub_points(index, 0) = map_points[adj_list[l->first][i]].point[0];
+          sub_points(index, 1) = map_points[adj_list[l->first][i]].point[1];
+          sub_points(index, 2) = map_points[adj_list[l->first][i]].point[2];
+          index++;
+        }
+      }
+    }
+  }
+  
+  
+  NumericMatrix final(index, 3);
+  for (int i = 0; i < index; i++){
+    final(i, 0) = sub_points(i, 0);
+    final(i, 1) = sub_points(i, 1);
+    final(i, 2) = sub_points(i, 2);
+  }
+  return final;
+}
+
+// [[Rcpp::export]]
+NumericMatrix maximumSubgraph2(){
+  
+}
+
+// [[Rcpp::export]]
+NumericMatrix maximumSubgraph3(){
+  
+}
+
