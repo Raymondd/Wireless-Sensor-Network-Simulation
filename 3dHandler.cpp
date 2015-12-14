@@ -19,10 +19,14 @@ std::map<double, int> colors;
 struct point{double point[3];};
 std::map<double, point> map_points;
 
-int max1[2] = {1,2};
-int max2[2] = {1,3};
-int max3[2] = {1,4};
+struct subgraph{int colors[2]; int edges;};
+std::vector<subgraph> subgraphs;
 
+int terminalClique = 0;
+  
+bool compareByCount(const subgraph &a, const subgraph &b){
+  return a.edges < b.edges;
+}
 
 
 // [[Rcpp::export]]
@@ -254,6 +258,12 @@ NumericMatrix smallestLastOrdering3() {
         min = i;
         minKey = buckets[i][0];
         buckets[i].erase(buckets[i].begin());
+        
+        if(buckets[i].size() == counts.size()-1 && terminalClique == 0){
+          terminalClique = counts.size();
+          std::cout << "[1] \"TERMINAL CLIQUE:\" " << terminalClique << std::endl;
+        }
+        
         break;
       }
     }
@@ -447,11 +457,12 @@ NumericMatrix edgeCounter() {
 }
 
 // [[Rcpp::export]]
-void calculateSubgraphs(double radius){
-  
+void calculateSubgraphs(){
+  std::vector<point> order;
   std::map<double, int>::iterator l;
   for(int i=1; i < 4; i++){
-    for(int j = i+1; j <= 4, j++){
+    for(int j = i+1; j <= 4; j++){
+      
       int count = 0;
       for (l = colors.begin(); l != colors.end(); ++l){ 
         if(l->second == i || l->second == j){
@@ -462,27 +473,38 @@ void calculateSubgraphs(double radius){
           }
         }
       }
+      
+      subgraph temp;
+      temp.colors[0] = i;
+      temp.colors[1] = j;
+      temp.edges = count;
+      subgraphs.push_back(temp);
     }
   }
+  
+  
+  std::sort(subgraphs.begin(), subgraphs.end(), compareByCount);
+  
 }
 
-// [[Rcpp::export]]
-NumericMatrix maximumSubgraph1(){
-  NumericMatrix sub_points(pairs.nrow(),3);
+NumericMatrix getSubgraph(int max1, int max2){
+    NumericMatrix sub_points(pairs.nrow(),4);
   
   std::map<double, int>::iterator l;
   int index = 0;
   for (l = colors.begin(); l != colors.end(); ++l){ 
-    if(l->second == max1[0] || l->second == max1[1]){
+    if(l->second == max1 || l->second == max2){
       for (int i=0; i < adj_list[l->first].size(); i++) {
-        if(colors[adj_list[l->first][i]] == max1[0] || colors[adj_list[l->first][i]] == max1[1]){
+        if(colors[adj_list[l->first][i]] == max1 || colors[adj_list[l->first][i]] == max2){
           sub_points(index, 0) = map_points[l->first].point[0];
           sub_points(index, 1) = map_points[l->first].point[1];
           sub_points(index, 2) = map_points[l->first].point[2];
+          sub_points(index, 3) = l->second;
           index++;
           sub_points(index, 0) = map_points[adj_list[l->first][i]].point[0];
           sub_points(index, 1) = map_points[adj_list[l->first][i]].point[1];
           sub_points(index, 2) = map_points[adj_list[l->first][i]].point[2];
+          sub_points(index, 3) = colors[adj_list[l->first][i]];
           index++;
         }
       }
@@ -490,22 +512,28 @@ NumericMatrix maximumSubgraph1(){
   }
   
   
-  NumericMatrix final(index, 3);
+  NumericMatrix final(index, 4);
   for (int i = 0; i < index; i++){
     final(i, 0) = sub_points(i, 0);
     final(i, 1) = sub_points(i, 1);
     final(i, 2) = sub_points(i, 2);
+    final(i, 3) = sub_points(i, 3);
   }
   return final;
 }
 
+
+// [[Rcpp::export]]
+NumericMatrix maximumSubgraph1(){
+  return getSubgraph(subgraphs[0].colors[0], subgraphs[0].colors[1]);
+}
+
 // [[Rcpp::export]]
 NumericMatrix maximumSubgraph2(){
-  
+  return getSubgraph(subgraphs[1].colors[0], subgraphs[1].colors[1]);
 }
 
 // [[Rcpp::export]]
 NumericMatrix maximumSubgraph3(){
-  
+  return getSubgraph(subgraphs[2].colors[0], subgraphs[2].colors[1]);
 }
-

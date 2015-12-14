@@ -6,8 +6,8 @@ degreeDistribution <- function(n){
   counts = edgeCounter()
   x11()
   barplot(counts[,2], names = counts[,1], main="Bar Graph Edge Distribution", xlab="Edge Count", ylab="Vertices")
-  x11()
-  plot(counts[,2], main="Line Graph Edge Distribution", xlab="Edge Count", ylab="Vertices", type="o")
+  #x11()
+  #plot(counts[,2], main="Line Graph Edge Distribution", xlab="Edge Count", ylab="Vertices", type="o")
   print(paste("ACTUAL DEGREE: ",sum(counts[,2]*counts[,1])/n))
 }
 
@@ -30,7 +30,7 @@ generateGraph <- function(x, y, z, n, radius, neighbors){
   max_x = max[,1]
   max_y = max[,2]
   max_z = max[,3]
-  segments3d(max_x, max_y, max_z, col=rgb(0, 0, 0, 0.3), alpha=.3)
+  segments3d(max_x, max_y, max_z, col=rgb(0, 0, 0, 0.3))
   
   
   print("CREATING EDGE DISTRIBUTION")
@@ -57,12 +57,21 @@ generateGraph <- function(x, y, z, n, radius, neighbors){
   barplot(color_table, col=colors[1:max])
   
   print("FINDING MAX BIPARTIDE SUBGRAPH")
+  calculateSubgraphs()
   edges_one = maximumSubgraph1()
-  open3d()
-  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=5)
-  segments3d(edges_one[,1], edges_one[,2], edges_one[,3], col=rgb(0, 0, 0, 0.1))
+  edges_two = maximumSubgraph2()
+  edges_three = maximumSubgraph3()
   
-  print("GRAPHING MAX BIPARTIDE SUBGRAPH")
+  print("GRAPHING MAX BIPARTIDE SUBGRAPHs")
+  open3d();
+  plot3d(edges_one[,1],edges_one[,2],edges_one[,3], col=colors[edges_one[,4]], size=5)
+  segments3d(edges_one[,1], edges_one[,2], edges_one[,3], col=rgb(0, 0, 0, 0.1))
+  open3d()
+  plot3d(edges_two[,1],edges_two[,2],edges_two[,3], col=colors[edges_two[,4]], size=5)
+  segments3d(edges_two[,1], edges_two[,2], edges_two[,3], col=rgb(0, 0, 0, 0.1))
+  open3d()
+  plot3d(edges_three[,1],edges_three[,2],edges_three[,3], col=colors[edges_three[,4]], size=5)
+  segments3d(edges_three[,1], edges_three[,2], edges_three[,3], col=rgb(0, 0, 0, 0.1))
 }
 
 generateRGG <- function(n, degree, type){
@@ -103,4 +112,4 @@ generateRGG <- function(n, degree, type){
 }
 
 
-generateRGG(64000, 120, "sphere")
+generateRGG(100, 100, "square")
