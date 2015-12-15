@@ -12,8 +12,17 @@ degreeDistribution <- function(n){
 }
 
 generateGraph <- function(x, y, z, n, radius, neighbors){
+  zoom = .75;
+  userMatrix = rbind(c( 0.999751747, 0.003072005, -0.02207799,    0),
+                  c(-0.004035458, 0.999035239, -0.04372767,     0),
+                    c(0.021922402, 0.043805979,  0.99879962,    0),
+                      c(0.0000000,  0.00000000,  0.00000000,    1))
+  windowRect = c(100, 144, 891, 921)
+  
+  
   print("PLOTTING GRAPH")
-  plot3d(x,y,z, col="red", size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(x,y,z, col="red", size=10, axes="false", name="Full RGG")
   set_points(cbind(x,y,z))
   
   print("GENERATING CONNECTIONS")
@@ -24,8 +33,9 @@ generateGraph <- function(x, y, z, n, radius, neighbors){
   segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 0, 0.3), alpha=.3)
   
   print("GRAPHING MAX NODE")
-  open3d()
-  plot3d(x,y,z, col="red", size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(x,y,z, col="red", size=10, axes="false", name="Maximum and Minimum Node Plot")
+  axes3d(edges = "bbox", labels=c("","",""))
   max = maxEdges()
   max_x = max[,1]
   max_y = max[,2]
@@ -39,22 +49,23 @@ generateGraph <- function(x, y, z, n, radius, neighbors){
   print("CALCULATING SMALLEST LAST ORDERING")
   stats = smallestLastOrdering3()
   print("GRAPHING SMALLEST LAST ORDERING")
-  x11()
-  plot(stats[,2], col="red", type="l", ylim=range(c(stats[,1],stats[,2])))
+  x11(width=15)
+  plot(stats[,2], col="red", type="l", ylim=range(c(stats[,1],stats[,2])), main="Smallest Last Ordering",  xlab="Removel Position", ylab="Degree")
   lines(stats[,1], col="blue", type="l")
   
   print("GENERATING COLORS")
   coloring = colorGraph()
   max = max(coloring[,4])
+  #colors = sample(colours(), max)
   colors = rainbow(max)
   print("PLOTTING COLORS")
-  open3d()
-  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(coloring[,1],coloring[,2],coloring[,3], col=colors[coloring[,4]], size=10, axes="false", name="Full Coloring RGG")
   segments3d(pairs_x, pairs_y, pairs_z, col=rgb(0, 0, 0, 0.1), alpha=.3)
   print(paste("COLOR COUNT: ", max))
   color_table = table(coloring[,4])
   x11()
-  barplot(color_table, col=colors[1:max])
+  barplot(color_table, col=colors[1:max], main="Color Distribution", xlab="Color", ylab="Count")
   
   print("FINDING MAX BIPARTIDE SUBGRAPH")
   calculateSubgraphs()
@@ -63,14 +74,14 @@ generateGraph <- function(x, y, z, n, radius, neighbors){
   edges_three = maximumSubgraph3()
   
   print("GRAPHING MAX BIPARTIDE SUBGRAPHs")
-  open3d();
-  plot3d(edges_one[,1],edges_one[,2],edges_one[,3], col=colors[edges_one[,4]], size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(edges_one[,1],edges_one[,2],edges_one[,3], col=colors[edges_one[,4]], size=10, axes="false", name="Largest Bipartide Subgraph")
   segments3d(edges_one[,1], edges_one[,2], edges_one[,3], col=rgb(0, 0, 0, 0.1))
-  open3d()
-  plot3d(edges_two[,1],edges_two[,2],edges_two[,3], col=colors[edges_two[,4]], size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(edges_two[,1],edges_two[,2],edges_two[,3], col=colors[edges_two[,4]], size=10, axes="false", name="Second Largest Bipartide Subgraph")
   segments3d(edges_two[,1], edges_two[,2], edges_two[,3], col=rgb(0, 0, 0, 0.1))
-  open3d()
-  plot3d(edges_three[,1],edges_three[,2],edges_three[,3], col=colors[edges_three[,4]], size=5)
+  open3d(zoom = zoom, userMatrix = userMatrix, windowRect=windowRect)
+  plot3d(edges_three[,1],edges_three[,2],edges_three[,3], col=colors[edges_three[,4]], size=10, axes="false", name="Third Largest Bipartide Subgraph")
   segments3d(edges_three[,1], edges_three[,2], edges_three[,3], col=rgb(0, 0, 0, 0.1))
 }
 
@@ -112,4 +123,4 @@ generateRGG <- function(n, degree, type){
 }
 
 
-generateRGG(100, 100, "square")
+generateRGG(20, 9, "square")

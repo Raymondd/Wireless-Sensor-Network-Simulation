@@ -25,7 +25,7 @@ std::vector<subgraph> subgraphs;
 int terminalClique = 0;
   
 bool compareByCount(const subgraph &a, const subgraph &b){
-  return a.edges < b.edges;
+  return a.edges > b.edges;
 }
 
 
@@ -302,6 +302,8 @@ NumericMatrix maxEdges() {
     }
   }
   
+  int min = 10000;
+  double minKey = 0;
   int max = 0;
   double maxKey = 0;
   std::map<double, int>::iterator it;
@@ -310,16 +312,20 @@ NumericMatrix maxEdges() {
     if(it->second > max){
       max = it->second;
       maxKey = it->first;
+    }else if(it->second < min){
+      min = it->second;
+      minKey = it->first;
     }
   }
   
   std::cout << "[1] \"MAX EDGE #: " << max << "\"" << std::endl;
+  std::cout << "[1] \"MIN EDGE #: " << min << "\"" << std::endl;
   
-  int finalSize = max*2;
+  int finalSize = (max+min)*2;
   NumericMatrix final(finalSize,3);
   int num = 0;
   for(int i = 0; i < pairs.nrow(); i++){
-    if(double(pairs(i,0)) == maxKey){
+    if(double(pairs(i,0)) == maxKey || double(pairs(i,0)) == minKey){
       final(num,0) = pairs(i,0);
       final(num,1) = pairs(i,1);
       final(num,2) = pairs(i,2);
@@ -375,6 +381,8 @@ NumericMatrix distance3D(double radius, int neighbors) {
 
   
   pairs = final;
+    std::cout << "[1] \"TOTAL DEGREE #: " << final.nrow()/2 << "\"" << std::endl;
+  
   return final;
 }
 
@@ -488,12 +496,13 @@ void calculateSubgraphs(){
 }
 
 NumericMatrix getSubgraph(int max1, int max2){
-    NumericMatrix sub_points(pairs.nrow(),4);
-  
+  NumericMatrix sub_points(pairs.nrow(),4);
+  int v = 0;
   std::map<double, int>::iterator l;
   int index = 0;
   for (l = colors.begin(); l != colors.end(); ++l){ 
     if(l->second == max1 || l->second == max2){
+      v++;
       for (int i=0; i < adj_list[l->first].size(); i++) {
         if(colors[adj_list[l->first][i]] == max1 || colors[adj_list[l->first][i]] == max2){
           sub_points(index, 0) = map_points[l->first].point[0];
@@ -519,6 +528,10 @@ NumericMatrix getSubgraph(int max1, int max2){
     final(i, 2) = sub_points(i, 2);
     final(i, 3) = sub_points(i, 3);
   }
+  
+  std::cout << "[1] \"BACKBONE VERTICE #: " << v << "\"" << std::endl;
+  std::cout << "[1] \"BACKBONE EDGE #: " << final.nrow()/2 << "\"" << std::endl;
+  std::cout << "[1] \"BACKBONE V %: " << v/points.nrow() << "\"" << std::endl;
   return final;
 }
 
